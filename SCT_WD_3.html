@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tic-Tac-Toe</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Arial', sans-serif;
+      background: linear-gradient(135deg, #ff7e5f, #feb47b); /* Gradient background */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      flex-direction: column;
+      color: #fff;
+    }
+
+    h1 {
+      font-size: 3em;
+      margin-bottom: 20px;
+      text-align: center;
+      text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .game-board {
+      display: grid;
+      grid-template-columns: repeat(3, 120px);
+      grid-template-rows: repeat(3, 120px);
+      gap: 15px;
+      margin-bottom: 20px;
+      transition: all 0.3s ease;
+    }
+
+    .cell {
+      width: 120px;
+      height: 120px;
+      background: #ffffff;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.5em;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      transition: background 0.2s, transform 0.2s ease-in-out;
+    }
+
+    .cell:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: scale(1.05);
+    }
+
+    .cell.X {
+      color: #ff5c8d; /* X color */
+    }
+
+    .cell.O {
+      color: #4fa3ff; /* O color */
+    }
+
+    .button {
+      padding: 12px 24px;
+      font-size: 1.2em;
+      border-radius: 30px;
+      border: none;
+      background: #4fa3ff;
+      color: white;
+      cursor: pointer;
+      transition: background 0.3s, transform 0.2s ease-in-out;
+      margin-top: 10px;
+    }
+
+    .button:hover {
+      background: #3b80c4;
+      transform: scale(1.1);
+    }
+
+    .button:active {
+      transform: scale(1.05);
+    }
+
+    #status {
+      font-size: 1.5em;
+      margin-top: 20px;
+      text-shadow: 1px 1px 6px rgba(0, 0, 0, 0.3);
+    }
+
+    .container {
+      text-align: center;
+      padding: 20px;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 20px;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5);
+    }
+
+    #toggleGameModeButton {
+      margin-top: 10px;
+      background: #feb47b;
+    }
+
+    #toggleGameModeButton:hover {
+      background: #ff9f6e;
+    }
+
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>Tic-Tac-Toe</h1>
+    <div id="status">Player X's turn</div>
+    <div class="game-board" id="board"></div>
+    <button class="button" id="resetButton">Reset Game</button>
+    <button class="button" id="toggleGameModeButton">Switch to Computer</button>
+  </div>
+
+  <script>
+    const boardElement = document.getElementById('board');
+    const resetButton = document.getElementById('resetButton');
+    const statusElement = document.getElementById('status');
+    const toggleGameModeButton = document.getElementById('toggleGameModeButton');
+    let currentPlayer = 'X'; // 'X' starts first
+    let gameBoard = Array(9).fill(null);
+    let gameOver = false;
+    let playerVsComputer = false; // default is Player vs Player
+
+    // Create the board
+    function createBoard() {
+      boardElement.innerHTML = '';
+      gameBoard.forEach((cell, index) => {
+        const cellElement = document.createElement('div');
+        cellElement.classList.add('cell');
+        cellElement.setAttribute('data-index', index);
+        cellElement.textContent = cell;
+        if (cell) {
+          cellElement.classList.add(cell); // Add 'X' or 'O' class for color
+        }
+        cellElement.addEventListener('click', () => handleCellClick(index));
+        boardElement.appendChild(cellElement);
+      });
+    }
+
+    // Handle cell click
+    function handleCellClick(index) {
+      if (gameBoard[index] || gameOver) return;
+
+      gameBoard[index] = currentPlayer;
+      createBoard();
+      checkForWinner();
+
+      if (!gameOver) {
+        currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+        if (playerVsComputer && currentPlayer === 'O') {
+          computerMove();
+        }
+      }
+    }
+
+    // Check for winner
+    function checkForWinner() {
+      const winningCombinations = [
+        [0, 1, 2],
+        [3, 4, 5],
+        [6, 7, 8],
+        [0, 3, 6],
+        [1, 4, 7],
+        [2, 5, 8],
+        [0, 4, 8],
+        [2, 4, 6]
+      ];
+
+      for (const combination of winningCombinations) {
+        const [a, b, c] = combination;
+        if (gameBoard[a] && gameBoard[a] === gameBoard[b] && gameBoard[a] === gameBoard[c]) {
+          gameOver = true;
+          statusElement.textContent = `${gameBoard[a]} wins!`;
+          return;
+        }
+      }
+
+      if (!gameBoard.includes(null)) {
+        gameOver = true;
+        statusElement.textContent = "It's a draw!";
+      } else {
+        statusElement.textContent = `Player ${currentPlayer}'s turn`;
+      }
+    }
+
+    // Computer's move
+    function computerMove() {
+      const availableCells = gameBoard.map((cell, index) => cell === null ? index : null).filter(index => index !== null);
+      const randomIndex = availableCells[Math.floor(Math.random() * availableCells.length)];
+      gameBoard[randomIndex] = 'O';
+      createBoard();
+      checkForWinner();
+      if (!gameOver) {
+        currentPlayer = 'X';
+        statusElement.textContent = `Player ${currentPlayer}'s turn`;
+      }
+    }
+
+    // Reset the game
+    function resetGame() {
+      gameBoard = Array(9).fill(null);
+      currentPlayer = 'X';
+      gameOver = false;
+      statusElement.textContent = `Player ${currentPlayer}'s turn`;
+      createBoard();
+    }
+
+    // Toggle game mode
+    function toggleGameMode() {
+      playerVsComputer = !playerVsComputer;
+      resetGame();
+      if (playerVsComputer) {
+        toggleGameModeButton.textContent = 'Switch to Player vs Player';
+        statusElement.textContent = `Player X's turn`;
+      } else {
+        toggleGameModeButton.textContent = 'Switch to Computer';
+        statusElement.textContent = `Player X's turn`;
+      }
+    }
+
+    // Event listeners
+    resetButton.addEventListener('click', resetGame);
+    toggleGameModeButton.addEventListener('click', toggleGameMode);
+
+    // Initialize the game
+    createBoard();
+    statusElement.textContent = `Player ${currentPlayer}'s turn`;
+  </script>
+
+</body>
+</html>
